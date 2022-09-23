@@ -1,25 +1,37 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:whatsapp_clone/pages/home.dart';
 import 'package:whatsapp_clone/utils/colors.dart';
+import 'package:pinput/pinput.dart';
 
 class VerifyWithOTP extends StatefulWidget {
-  const VerifyWithOTP(
-      {required this.phoneNumber, required this.verificationId, super.key});
+  const VerifyWithOTP({required this.phoneNumber, super.key});
   final String? phoneNumber;
-  final String? verificationId;
 
   @override
   State<VerifyWithOTP> createState() => _VerifyWithOTPState();
 }
 
 class _VerifyWithOTPState extends State<VerifyWithOTP> {
-  TextEditingController phoneNumberController = TextEditingController();
+  final GlobalKey<ScaffoldState> _scaffoldkey = GlobalKey<ScaffoldState>();
+  String? verificationCode;
+  TextEditingController pinController = TextEditingController();
   final _auth = FirebaseAuth.instance;
 
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
+    final defaultPinTheme = PinTheme(
+      width: size.width * .5,
+      height: 56,
+      textStyle:
+          const TextStyle(fontSize: 20, color: Color.fromRGBO(30, 60, 87, 1)),
+      decoration: BoxDecoration(
+          border: Border(bottom: BorderSide(color: kWhatsAppColor, width: 2))),
+    );
+
     return Scaffold(
+      key: _scaffoldkey,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         shadowColor: Colors.transparent,
@@ -57,23 +69,36 @@ class _VerifyWithOTPState extends State<VerifyWithOTP> {
                 ],
               ),
             ),
-            SizedBox(
-              width: size.width * .5,
-              child: Container(
-                decoration: BoxDecoration(
-                    border: Border(
-                        bottom: BorderSide(color: kWhatsAppColor, width: 2))),
-                child: TextField(
-                  controller: phoneNumberController,
-                  textAlign: TextAlign.center,
-                  decoration: InputDecoration(
-                      hintText: '-- -- -- -- -- --',
-                      fillColor: kWhatsAppColor,
-                      focusColor: kWhatsAppColor,
-                      hoverColor: kWhatsAppColor,
-                      contentPadding: const EdgeInsets.only(top: 10)),
-                ),
+            Padding(
+              padding: EdgeInsets.symmetric(horizontal: size.width * .2),
+              child: Pinput(
+                length: 6,
+                defaultPinTheme: defaultPinTheme,
+                controller: pinController,
+                pinAnimationType: PinAnimationType.fade,
+                onSubmitted: (pin) async {
+                  try {
+                    await _auth
+                        .signInWithCredential(PhoneAuthProvider.credential(
+                            verificationId: verificationCode!, smsCode: pin))
+                        .then((value) async {
+                      if (value.user != null) {
+                        Navigator.pushAndRemoveUntil(
+                            context,
+                            MaterialPageRoute(
+                                builder: (context) => const HomeScreen()),
+                            (route) => false);
+                      }
+                    });
+                  } catch (e) {
+                    ScaffoldMessenger.of(context)
+                        .showSnackBar(SnackBar(content: Text(e.toString())));
+                  }
+                },
               ),
+            ),
+            const SizedBox(
+              height: 10,
             ),
             const Text(
               'Enter 6-digit code',
@@ -83,18 +108,21 @@ class _VerifyWithOTPState extends State<VerifyWithOTP> {
               height: 15,
             ),
             ElevatedButton(
+              style: ButtonStyle(
+                  backgroundColor: MaterialStateProperty.all(kWhatsAppColor)),
               onPressed: () async {
-                final credential = PhoneAuthProvider.credential(
-                  verificationId: widget.verificationId!,
-                  smsCode: phoneNumberController.text.toString(),
-                );
-                try {
-                  await _auth.signInWithCredential(credential);
-                  // navigate to chat screen
-                  // Navigator.push(context, MaterialPageRoute(builder: (context)=>));
-                } catch (e) {
-                  print(e);
-                }
+                await _auth
+                    .signInWithCredential(PhoneAuthProvider.credential(
+                        verificationId: verificationCode!,
+                        smsCode: pinController.text))
+                    .then((value) async {
+                  if (value.user != null) {
+                    Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) => const HomeScreen()));
+                  }
+                });
               },
               child: const Text('Verify'),
             ),
@@ -132,5 +160,38 @@ class _VerifyWithOTPState extends State<VerifyWithOTP> {
         ),
       ),
     );
+  }
+
+  verifyPhone() async {
+    await _auth.verifyPhoneNumber(
+        phoneNumber: '+${widget.phoneNumber}',
+        verificationCompleted: (PhoneAuthCredential credential) async {
+          await _auth.signInWithCredential(credential).then((value) async {
+            if (value.user != null) {
+              Navigator.pushAndRemoveUntil(
+                  context,
+                  MaterialPageRoute(builder: (context) => const HomeScreen()),
+                  (route) => false);
+            }
+          });
+        },
+        verificationFailed: (FirebaseAuthException e) {
+          print(e.message);
+        },
+        codeSent: (String verificationId, int? resendToken) {
+          setState(() {
+            verificationCode = verificationId;
+          });
+        },
+        codeAutoRetrievalTimeout: (String verificationId) {
+          verificationCode = verificationId;
+        },
+        timeout: const Duration(seconds: 120));
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    verifyPhone();
   }
 }

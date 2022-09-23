@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:whatsapp_clone/pages/verify_with_otp.dart';
 import 'package:whatsapp_clone/utils/colors.dart';
 import 'package:country_picker/country_picker.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 
 class PhoneAuthPage extends StatefulWidget {
   const PhoneAuthPage({super.key});
@@ -16,59 +15,6 @@ class _PhoneAuthPageState extends State<PhoneAuthPage> {
   String? countryCode;
   TextEditingController phoneController = TextEditingController();
   bool loading = false;
-  final FirebaseAuth _auth = FirebaseAuth.instance;
-
-  verifyPhoneNumber() {
-    setState(() {
-      loading = true;
-    });
-
-    _auth.verifyPhoneNumber(
-      phoneNumber: '+$countryCode${phoneController.text}',
-      verificationCompleted: (PhoneAuthCredential credential) async {
-        await _auth.signInWithCredential(credential);
-
-        setState(() {
-          loading = false;
-        });
-      },
-      verificationFailed: (FirebaseAuthException e) {
-        if (e.code == 'invalid-phone-number') {
-          print('the provided phone number is not valid');
-        }
-        setState(() {
-          loading = false;
-        });
-      },
-      codeSent: (String verificationId, int? resendToken) async {
-        String smsCode = '2313';
-
-        PhoneAuthCredential credential = PhoneAuthProvider.credential(
-            verificationId: verificationId, smsCode: smsCode);
-
-        await _auth.signInWithCredential(credential);
-
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => VerifyWithOTP(
-              verificationId: verificationId,
-              phoneNumber: phoneController.text,
-            ),
-          ),
-        );
-
-        setState(() {
-          loading = false;
-        });
-      },
-      codeAutoRetrievalTimeout: (String str) {
-        setState(() {
-          loading = false;
-        });
-      },
-    );
-  }
 
   countryPicker() {
     showCountryPicker(
@@ -204,7 +150,22 @@ class _PhoneAuthPageState extends State<PhoneAuthPage> {
 
               //next button
               ElevatedButton(
-                onPressed: verifyPhoneNumber,
+                onPressed: () {
+                  setState(() {
+                    loading = true;
+                  });
+                  phoneController.text == ''
+                      ? phoneController.text = 'required'
+                      : Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (context) => VerifyWithOTP(
+                                  phoneNumber:
+                                      '$countryCode${phoneController.text.toString()}')));
+                  setState(() {
+                    loading = false;
+                  });
+                },
                 style: ButtonStyle(
                     backgroundColor: MaterialStateProperty.all(kWhatsAppColor)),
                 child: loading
