@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:whatsapp_clone/pages/welcome_page.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:whatsapp_clone/utils/route_name.dart';
+import 'package:whatsapp_clone/utils/routes.dart';
 import 'firebase_options.dart';
 
 void main() async {
@@ -22,7 +23,9 @@ class WhatsAppClone extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      home: const WelcomePage(),
+      // home: const ProfileInfo(),
+      initialRoute: RouteName.profileInfo,
+      onGenerateRoute: Routes.generateRoute,
     );
   }
 }

@@ -1,12 +1,12 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:whatsapp_clone/pages/home.dart';
 import 'package:whatsapp_clone/utils/colors.dart';
 import 'package:pinput/pinput.dart';
+import 'package:whatsapp_clone/utils/route_name.dart';
 
 class VerifyWithOTP extends StatefulWidget {
-  const VerifyWithOTP({required this.phoneNumber, super.key});
-  final String? phoneNumber;
+  final dynamic data;
+  const VerifyWithOTP({required this.data, super.key});
 
   @override
   State<VerifyWithOTP> createState() => _VerifyWithOTPState();
@@ -61,7 +61,7 @@ class _VerifyWithOTPState extends State<VerifyWithOTP> {
                     text: 'Waiting to automatically detect an SMS sent to.',
                   ),
                   TextSpan(
-                      text: widget.phoneNumber.toString(),
+                      text: widget.data['phoneNumber'].toString(),
                       style: const TextStyle(fontWeight: FontWeight.bold)),
                   const TextSpan(
                       text: 'Wrong number?',
@@ -83,11 +83,7 @@ class _VerifyWithOTPState extends State<VerifyWithOTP> {
                             verificationId: verificationCode!, smsCode: pin))
                         .then((value) async {
                       if (value.user != null) {
-                        Navigator.pushAndRemoveUntil(
-                            context,
-                            MaterialPageRoute(
-                                builder: (context) => const HomeScreen()),
-                            (route) => false);
+                        Navigator.pushNamed(context, RouteName.profileInfo);
                       }
                     });
                   } catch (e) {
@@ -117,10 +113,7 @@ class _VerifyWithOTPState extends State<VerifyWithOTP> {
                         smsCode: pinController.text))
                     .then((value) async {
                   if (value.user != null) {
-                    Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                            builder: (context) => const HomeScreen()));
+                    Navigator.pushNamed(context, RouteName.profileInfo);
                   }
                 });
               },
@@ -164,14 +157,11 @@ class _VerifyWithOTPState extends State<VerifyWithOTP> {
 
   verifyPhone() async {
     await _auth.verifyPhoneNumber(
-        phoneNumber: '+${widget.phoneNumber}',
+        phoneNumber: '+${widget.data['phoneNumber']}',
         verificationCompleted: (PhoneAuthCredential credential) async {
           await _auth.signInWithCredential(credential).then((value) async {
             if (value.user != null) {
-              Navigator.pushAndRemoveUntil(
-                  context,
-                  MaterialPageRoute(builder: (context) => const HomeScreen()),
-                  (route) => false);
+              Navigator.pushNamed(context, RouteName.profileInfo);
             }
           });
         },

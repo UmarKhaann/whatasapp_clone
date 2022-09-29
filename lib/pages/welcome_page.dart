@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:whatsapp_clone/pages/phone_auth_page.dart';
 import 'package:whatsapp_clone/utils/colors.dart';
+import 'package:whatsapp_clone/utils/route_name.dart';
 
-class WelcomePage extends StatelessWidget {
-  const WelcomePage({super.key});
+class WelcomeScreen extends StatelessWidget {
+  const WelcomeScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -23,12 +23,12 @@ class WelcomePage extends StatelessWidget {
                   fontSize: 30,
                 ),
               ),
-              Expanded(child: Container()),
+              Expanded(flex: 1, child: Container()),
               const CircleAvatar(
                 backgroundImage: AssetImage('assets/images/welcomepage.jpeg'),
                 radius: 120,
               ),
-              Expanded(child: Container()),
+              Expanded(flex: 2, child: Container()),
               const Text(
                 'Read out Privacy Policy. Tap ""Agree and continue" to accept the Terms of Service.',
                 style: TextStyle(),
@@ -41,10 +41,7 @@ class WelcomePage extends StatelessWidget {
                 padding: const EdgeInsets.symmetric(horizontal: 25),
                 child: ElevatedButton(
                   onPressed: () {
-                    Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                            builder: (context) => const PhoneAuthPage()));
+                    Navigator.pushNamed(context, RouteName.phoneProviderScreen);
                   },
                   style: ButtonStyle(
                     minimumSize: MaterialStateProperty.all(

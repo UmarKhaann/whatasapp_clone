@@ -1,20 +1,21 @@
 import 'package:flutter/material.dart';
-import 'package:whatsapp_clone/pages/verify_with_otp.dart';
 import 'package:whatsapp_clone/utils/colors.dart';
 import 'package:country_picker/country_picker.dart';
+import 'package:whatsapp_clone/utils/route_name.dart';
 
-class PhoneAuthPage extends StatefulWidget {
-  const PhoneAuthPage({super.key});
+class PhoneProviderScreen extends StatefulWidget {
+  const PhoneProviderScreen({super.key});
 
   @override
-  State<PhoneAuthPage> createState() => _PhoneAuthPageState();
+  State<PhoneProviderScreen> createState() => _PhoneProviderScreenState();
 }
 
-class _PhoneAuthPageState extends State<PhoneAuthPage> {
+class _PhoneProviderScreenState extends State<PhoneProviderScreen> {
   String selectedCountry = 'Select Country';
   String? countryCode;
   TextEditingController phoneController = TextEditingController();
   bool loading = false;
+  String phoneNumberHint = 'phone number';
 
   countryPicker() {
     showCountryPicker(
@@ -137,9 +138,9 @@ class _PhoneAuthPageState extends State<PhoneAuthPage> {
                     child: TextField(
                       keyboardType: TextInputType.number,
                       controller: phoneController,
-                      decoration: const InputDecoration(
-                        hintText: 'phone number',
-                        contentPadding: EdgeInsets.only(top: 15),
+                      decoration: InputDecoration(
+                        hintText: phoneNumberHint,
+                        contentPadding: const EdgeInsets.only(top: 15),
                       ),
                     ),
                   ),
@@ -155,13 +156,13 @@ class _PhoneAuthPageState extends State<PhoneAuthPage> {
                     loading = true;
                   });
                   phoneController.text == ''
-                      ? phoneController.text = 'required'
-                      : Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                              builder: (context) => VerifyWithOTP(
-                                  phoneNumber:
-                                      '$countryCode${phoneController.text.toString()}')));
+                      ? phoneNumberHint = 'required field'
+                      : Navigator.pushNamed(context, RouteName.verifyWithOTP,
+                          arguments: {
+                              'phoneNumber':
+                                  '$countryCode${phoneController.text.toString()}'
+                            });
+
                   setState(() {
                     loading = false;
                   });
